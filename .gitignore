@@ -9,3 +9,4 @@ dist/
 *.sqlite
 *.sqlite-shm
 *.sqlite-wal
+tempo-data/
