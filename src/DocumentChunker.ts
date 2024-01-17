@@ -23,7 +23,7 @@ export const make = Effect.gen(function*(_) {
       ),
       Effect.forEach(
         (parsedChunk) => repository.upsert(parsedChunk.forInsert),
-        { concurrency: "unbounded" }
+        { concurrency: "unbounded", batching: true }
       ),
       Effect.tap((chunks) =>
         pipe(
@@ -39,7 +39,7 @@ export const make = Effect.gen(function*(_) {
 
   return {
     chunkDocument
-  }
+  } as const
 })
 
 export interface DocumentChunker {

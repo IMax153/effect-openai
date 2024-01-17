@@ -103,7 +103,7 @@ const make = Effect.gen(function*(_) {
     removeExtraneous,
     setEmbeddings,
     upsert
-  }
+  } as const
 })
 
 export interface DocumentChunkRepository {
