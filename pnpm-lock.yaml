@@ -24,8 +24,8 @@ dependencies:
     specifier: ^0.41.0
     version: 0.41.0(@effect/schema@0.60.4)(effect@2.1.1)
   '@sqlfx/sqlite':
-    specifier: ^0.41.0
-    version: 0.41.0(@effect/schema@0.60.4)(better-sqlite3@9.3.0)(effect@2.1.1)
+    specifier: ^0.41.1
+    version: 0.41.1(@effect/schema@0.60.4)(better-sqlite3@9.3.0)(effect@2.1.1)
   better-sqlite3:
     specifier: ^9.3.0
     version: 9.3.0
@@ -35,6 +35,9 @@ dependencies:
   openai:
     specifier: ^4.24.7
     version: 4.24.7
+  sqlite-vss:
+    specifier: ^0.1.2
+    version: 0.1.2
   tiktoken-node:
     specifier: ^0.0.6
     version: 0.0.6
@@ -1517,8 +1520,8 @@ packages:
       effect: 2.1.1
     dev: false
 
-  /@sqlfx/sqlite@0.41.0(@effect/schema@0.60.4)(better-sqlite3@9.3.0)(effect@2.1.1):
-    resolution: {integrity: sha512-VaQJiVzBc+szEfO3+lo1TyTOtfcZvQTMBZvfIEurVK71K7672qwDTPpTX9+ceKQ9Dtlz+H98NX7+dZ2qj+qbog==}
+  /@sqlfx/sqlite@0.41.1(@effect/schema@0.60.4)(better-sqlite3@9.3.0)(effect@2.1.1):
+    resolution: {integrity: sha512-ribkL/WomXoVHEIt1Bs8gtqd9PfTclnTYn5o/fkqAi4HZ0gFGJEgDjYlp9HL/mFhQEAqjp1zmHLy2flA0FMmVg==}
     peerDependencies:
       '@sqlite.org/sqlite-wasm': 3.44.2-build3
       better-sqlite3: ^9
@@ -5181,6 +5184,38 @@ packages:
   /sprintf-js@1.0.3:
     resolution: {integrity: sha512-D9cPgkvLlV3t3IzL0D0YLvGA9Ahk4PcvVwUbN0dSGr1aP0Nrt4AEnTUbuGvquEC0mA64Gqt1fzirlRs5ibXx8g==}
     dev: true
+
+  /sqlite-vss-darwin-arm64@0.1.2:
+    resolution: {integrity: sha512-zyDk9eg33nBABrUC4cqQ7el8KJaRPzsqp8Y/nGZ0CAt7o1PMqLoCOgREorill5MGiZEBmLqxdAgw0O2MFwq4mw==}
+    cpu: [arm64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /sqlite-vss-darwin-x64@0.1.2:
+    resolution: {integrity: sha512-w+ODOH2dNkyO6UaGclwC0jwNf/FBsKaE53XKJ7dFmpOvlvO0/9sA1stkWXygykRVWwa3UD8ow0qbQpRwdOFyqg==}
+    cpu: [x64]
+    os: [darwin]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /sqlite-vss-linux-x64@0.1.2:
+    resolution: {integrity: sha512-y1qktcHAZcfN1nYMcF5os/cCRRyaisaNc2C9I3ceLKLPAqUWIocsOdD5nNK/dIeGPag/QeT2ZItJ6uYWciLiAg==}
+    cpu: [x64]
+    os: [linux]
+    requiresBuild: true
+    dev: false
+    optional: true
+
+  /sqlite-vss@0.1.2:
+    resolution: {integrity: sha512-MgTz3GLT04ckv1kaesbrsUU6/kcVsA6vGeCS/HO5d/8zKqCuZFCD0QlJaQnS6zwaMyPG++BO/uu40MMrMa0cow==}
+    optionalDependencies:
+      sqlite-vss-darwin-arm64: 0.1.2
+      sqlite-vss-darwin-x64: 0.1.2
+      sqlite-vss-linux-x64: 0.1.2
+    dev: false
 
   /stack-utils@2.0.6:
     resolution: {integrity: sha512-XlkWvfIm6RmsWtNJx+uqtKLS8eqFbxUg0ZzLXqY0caEy9l7hruX8IpiDnjsLavoBgqCCR71TqWO8MaXYheJ3RQ==}

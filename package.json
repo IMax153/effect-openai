@@ -39,10 +39,11 @@
     "@effect/platform-node": "^0.41.5",
     "@effect/schema": "^0.60.4",
     "@sqlfx/sql": "^0.41.0",
-    "@sqlfx/sqlite": "^0.41.0",
+    "@sqlfx/sqlite": "^0.41.1",
     "better-sqlite3": "^9.3.0",
     "effect": "2.1.1",
     "openai": "^4.24.7",
+    "sqlite-vss": "^0.1.2",
     "tiktoken-node": "^0.0.6"
   },
   "devDependencies": {

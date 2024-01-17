@@ -38,7 +38,6 @@ export class ParsedDocumentChunk extends Schema.Class<ParsedDocumentChunk>()({
 export class DocumentChunk extends ParsedDocumentChunk.extend<DocumentChunk>()({
   id: Schema.number,
   contentHash: Schema.number,
-  embeddings: Schema.optionFromNullable(Embedding.FromSql),
   tokenCount: Schema.number,
   createdAt: Schema.Date,
   updatedAt: Schema.Date

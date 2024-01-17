@@ -41,20 +41,27 @@ const make = Effect.gen(function*(_) {
   const embedding = yield* _(Embedding.Embedding)
   const sql = yield* _(SQLite.tag)
 
+  const getEmbeddings = flow(
+    sql.singleSchemaOption(
+      Schema.number,
+      Embedding.FromSql,
+      (id) =>
+        sql<any>`SELECT rowid, embedding FROM vss_chunks WHERE rowid = ${id}`.pipe(
+          Effect.map((_) => _.map(({ embedding }) => embedding))
+        )
+    ),
+    Effect.withSpan("DocumentChunkRepository.setEmbeddings")
+  )
+
   const setEmbeddings = flow(
-    sql.singleSchema(
+    sql.voidSchema(
       Schema.struct({
         id: Schema.number,
-        embeddings: Embedding.FromSql
+        embeddings: Embedding.Embeddings
       }),
-      DocumentChunk.DocumentChunk,
       ({ embeddings, id }) =>
-        sql`
-        UPDATE document_chunks
-        SET embeddings = ${embeddings}, updated_at = TIME('now')
-        WHERE id = ${id}
-        RETURNING *
-      `
+        sql`INSERT INTO vss_chunks(rowid, embedding)
+          VALUES (${id}, '[${embeddings.join(",")}'])`
     ),
     Effect.withSpan("DocumentChunkRepository.setEmbeddings")
   )
@@ -78,12 +85,15 @@ const make = Effect.gen(function*(_) {
 
   const upsert = (chunk: ChunkForInsert) =>
     upsertDebounced(chunk).pipe(
-      Effect.flatMap((chunk) =>
-        Option.match(chunk.embeddings, {
+      Effect.bindTo("chunk"),
+      Effect.bind("embeddings", ({ chunk }) => getEmbeddings(chunk.id)),
+      Effect.flatMap(({ chunk, embeddings }) =>
+        Option.match(embeddings, {
           onNone: () =>
             Effect.log("Generating embeddings").pipe(
               Effect.zipRight(embedding.batched(chunk.fullContent)),
               Effect.flatMap((embeddings) => setEmbeddings({ id: chunk.id, embeddings })),
+              Effect.as(chunk),
               Effect.annotateLogs("chunkId", chunk.id.toString())
             ),
           onSome: () => Effect.succeed(chunk)

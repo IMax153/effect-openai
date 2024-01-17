@@ -12,7 +12,6 @@ export default Effect.flatMap(SQLite.tag, (sql) =>
       content TEXT NOT NULL,
       content_hash INTEGER NOT NULL,
       token_count INTEGER NOT NULL,
-      embeddings TEXT,
       created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     )

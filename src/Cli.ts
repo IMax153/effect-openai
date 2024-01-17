@@ -8,6 +8,7 @@ import * as Config from "effect/Config"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as NodePath from "node:path"
+import * as Vss from "sqlite-vss"
 import { fileURLToPath } from "url"
 import * as DocumentChunker from "./DocumentChunker.js"
 import { AbsolutePath } from "./domain/AbsolutePath.js"
@@ -29,6 +30,12 @@ const SQLiteLive = (embeddings: AbsolutePath) =>
     transformResultNames: Config.succeed(SQLite.transform.snakeToCamel)
   })
 
+const VSSLive = Layer.effectDiscard(Effect.gen(function*(_) {
+  const sql = yield* _(SQLite.tag)
+  yield* _(sql.loadExtension((Vss as any).getVectorLoadablePath()))
+  yield* _(sql.loadExtension((Vss as any).getVssLoadablePath()))
+}))
+
 const MigratorLive = Migrator.makeLayer({
   // TODO: improve
   loader: Migrator.fromDisk(`${__dirname}/migrations`),
@@ -39,7 +46,9 @@ const CommandEnvLive = (embeddings: AbsolutePath) =>
   Layer.mergeAll(
     DocumentChunker.DocumentChunkerLive,
     MigratorLive
-  ).pipe(Layer.provide(SQLiteLive(embeddings)))
+  ).pipe(
+    Layer.provide(VSSLive),
+    Layer.provide(SQLiteLive(embeddings)))
 
 // =============================================================================
 // Common Options & Arguments
