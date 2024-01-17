@@ -3,6 +3,7 @@ import { TreeFormatter } from "@effect/schema"
 import * as Schema from "@effect/schema/Schema"
 import * as SQLite from "@sqlfx/sqlite/Client"
 import type * as SqlError from "@sqlfx/sqlite/Error"
+import { Inspectable } from "effect"
 import * as Context from "effect/Context"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
@@ -12,7 +13,6 @@ import * as Option from "effect/Option"
 import * as DocumentChunk from "../domain/DocumentChunk.js"
 import type * as OpenAI from "../OpenAI.js"
 import * as Embedding from "./Embedding.js"
-import { Inspectable } from "effect"
 
 export class DocumentChunkRepositoryError extends Data.TaggedError("DocumentChunkRepositoryError")<{
   readonly method: string
@@ -25,7 +25,9 @@ export class DocumentChunkRepositoryError extends Data.TaggedError("DocumentChun
   get message() {
     const message = this.error._tag === "SchemaError"
       ? TreeFormatter.formatIssue(this.error.error)
-      : "message" in this.error ? this.error.message : Inspectable.format(this.error)
+      : "message" in this.error
+      ? this.error.message
+      : Inspectable.format(this.error)
     return `${this.method} failed: ${message}`
   }
 }
