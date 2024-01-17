@@ -4,7 +4,7 @@ CREATE TABLE IF NOT EXISTS "sqlfx_migrations" (
         name VARCHAR(255) NOT NULL
       );
 CREATE TABLE document_chunks (
-      id SERIAL PRIMARY KEY,
+      id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
       path TEXT NOT NULL,
       title TEXT,
       subtitle TEXT,
@@ -12,12 +12,13 @@ CREATE TABLE document_chunks (
       content_hash INTEGER NOT NULL,
       token_count INTEGER NOT NULL,
       embeddings TEXT,
-      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESAMP,
+      created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
       updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
     );
+
 CREATE UNIQUE INDEX document_chunks_content_hash_idx
     ON
       document_chunks (content_hash);
 
-INSERT INTO sqlfx_migrations VALUES(1,'2024-01-17 19:32:15','create_document_chunks');
-INSERT INTO sqlfx_migrations VALUES(2,'2024-01-17 19:32:15','document_chunk_unique_index');
+INSERT INTO sqlfx_migrations VALUES(1,'2024-01-17 22:44:42','create_document_chunks');
+INSERT INTO sqlfx_migrations VALUES(2,'2024-01-17 22:44:42','document_chunk_unique_index');

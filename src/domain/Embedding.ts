@@ -11,26 +11,7 @@ import * as Schedule from "effect/Schedule"
 import * as OpenAI from "../OpenAI.js"
 
 export const Embeddings = Schema.array(Schema.number)
-
-const parseEmbeddings = Schema.parse(Embeddings)
-
-export const FromSql = Schema.transformOrFail(
-  Schema.string,
-  Schema.array(Schema.number),
-  (sql) =>
-    Effect.try({
-      try: () => JSON.parse(sql),
-      catch: () =>
-        ParseResult.parseError(
-          ParseResult.type(
-            Schema.string.ast,
-            sql,
-            "Could not parse embedding"
-          )
-        )
-    }).pipe(Effect.flatMap(parseEmbeddings)),
-  (_) => ParseResult.succeed(JSON.stringify(_))
-)
+export const FromSql = Schema.parseJson(Embeddings)
 
 const retryPolicy = Schedule.fixed(Duration.millis(100)).pipe(
   Schedule.compose(Schedule.recurs(3))

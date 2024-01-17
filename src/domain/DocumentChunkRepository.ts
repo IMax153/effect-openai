@@ -1,4 +1,5 @@
 import * as ExperimentalRequestResolver from "@effect/experimental/RequestResolver"
+import { TreeFormatter } from "@effect/schema"
 import * as Schema from "@effect/schema/Schema"
 import * as SQLite from "@sqlfx/sqlite/Client"
 import type * as SqlError from "@sqlfx/sqlite/Error"
@@ -11,6 +12,7 @@ import * as Option from "effect/Option"
 import * as DocumentChunk from "../domain/DocumentChunk.js"
 import type * as OpenAI from "../OpenAI.js"
 import * as Embedding from "./Embedding.js"
+import { Inspectable } from "effect"
 
 export class DocumentChunkRepositoryError extends Data.TaggedError("DocumentChunkRepositoryError")<{
   readonly method: string
@@ -19,7 +21,14 @@ export class DocumentChunkRepositoryError extends Data.TaggedError("DocumentChun
     | SqlError.SchemaError
     | OpenAI.OpenAIError
     | SqlError.ResultLengthMismatch
-}> {}
+}> {
+  get message() {
+    const message = this.error._tag === "SchemaError"
+      ? TreeFormatter.formatIssue(this.error.error)
+      : "message" in this.error ? this.error.message : Inspectable.format(this.error)
+    return `${this.method} failed: ${message}`
+  }
+}
 
 export const DocumentChunkForInsert = DocumentChunk.DocumentChunk.struct.pipe(
   Schema.omit("id", "createdAt", "updatedAt")
@@ -40,9 +49,9 @@ const make = Effect.gen(function*(_) {
       ({ embeddings, id }) =>
         sql`
         UPDATE document_chunks
-        SET embeddings = ${embeddings}, updated_at = NOW()
+        SET embeddings = ${embeddings}, updated_at = TIME('now')
         WHERE id = ${id}
-        RETURNING document_chunks.*
+        RETURNING *
       `
     ),
     Effect.withSpan("DocumentChunkRepository.setEmbeddings")
@@ -55,7 +64,7 @@ const make = Effect.gen(function*(_) {
       sql`INSERT INTO document_chunks ${sql.insert(chunk)}
           ON CONFLICT (content_hash) DO UPDATE
           SET content_hash = EXCLUDED.content_hash
-          RETURNING document_chunks.*`
+          RETURNING *`
   })
 
   const upsertResolver = yield* _(ExperimentalRequestResolver.dataLoader(

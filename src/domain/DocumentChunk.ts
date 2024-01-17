@@ -1,7 +1,7 @@
 import * as Schema from "@effect/schema/Schema"
 import * as Hash from "effect/Hash"
 import * as Option from "effect/Option"
-import * as TikToken from "tiktoken-node"
+import TikToken from "tiktoken-node"
 import * as AbsolutePath from "./AbsolutePath.js"
 import * as Embedding from "./Embedding.js"
 
@@ -40,6 +40,6 @@ export class DocumentChunk extends ParsedDocumentChunk.extend<DocumentChunk>()({
   contentHash: Schema.number,
   embeddings: Schema.optionFromNullable(Embedding.FromSql),
   tokenCount: Schema.number,
-  createdAt: Schema.DateFromSelf,
-  updatedAt: Schema.DateFromSelf
+  createdAt: Schema.Date,
+  updatedAt: Schema.Date
 }) {}

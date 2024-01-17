@@ -1,12 +1,8 @@
 #!/usr/bin/env node
 
 import * as DevTools from "@effect/experimental/DevTools"
-import * as NodeSdk from "@effect/opentelemetry/NodeSdk"
 import * as NodeContext from "@effect/platform-node/NodeContext"
 import * as Node from "@effect/platform-node/Runtime"
-import { PrometheusExporter } from "@opentelemetry/exporter-prometheus"
-import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-grpc"
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-node"
 import * as Config from "effect/Config"
 import * as ConfigProvider from "effect/ConfigProvider"
 import * as Effect from "effect/Effect"
@@ -19,24 +15,6 @@ const OpenAILive = OpenAI.makeLayer({
   organization: Config.option(Config.secret("organization"))
 })
 
-const OtelLive = DevTools.layer().pipe(
-  Layer.provideMerge(
-    NodeSdk.layer(() => ({
-      resource: {
-        serviceName: "effect-openai"
-      },
-      spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
-      metricReader: new PrometheusExporter({ port: 9464 })
-    }))
-  )
-)
-
-const TracingLive = Config.boolean("tracing").pipe(
-  Config.withDefault(false),
-  Effect.map((enabled) => enabled ? OtelLive : Layer.effectDiscard(Effect.unit)),
-  Layer.unwrapEffect
-)
-
 const ConfigProviderLive = Layer.setConfigProvider(
   ConfigProvider.fromEnv({ pathDelim: "_", seqDelim: "," }).pipe(
     ConfigProvider.nested("openai"),
@@ -45,11 +23,11 @@ const ConfigProviderLive = Layer.setConfigProvider(
 )
 
 const MainLive = Layer.mergeAll(NodeContext.layer, OpenAILive).pipe(
-  Layer.provide(TracingLive),
+  Layer.provide(DevTools.layer()),
   Layer.provide(ConfigProviderLive)
 )
 
-Effect.suspend(() => Cli.run(process.argv.slice(2))).pipe(
+Effect.suspend(() => Cli.run(process.argv)).pipe(
   Effect.provide(MainLive),
   Node.runMain
 )

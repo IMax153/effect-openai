@@ -35,13 +35,9 @@
   "dependencies": {
     "@effect/cli": "^0.30.1",
     "@effect/experimental": "^0.6.8",
-    "@effect/opentelemetry": "^0.30.7",
     "@effect/platform": "^0.42.4",
     "@effect/platform-node": "^0.41.5",
     "@effect/schema": "^0.60.4",
-    "@opentelemetry/exporter-prometheus": "^0.47.0",
-    "@opentelemetry/exporter-trace-otlp-grpc": "^0.47.0",
-    "@opentelemetry/sdk-trace-node": "^1.20.0",
     "@sqlfx/sql": "^0.41.0",
     "@sqlfx/sqlite": "^0.41.0",
     "better-sqlite3": "^9.3.0",
