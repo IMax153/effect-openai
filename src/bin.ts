@@ -44,8 +44,7 @@ const ConfigProviderLive = Layer.setConfigProvider(
   )
 )
 
-const MainLive = NodeContext.layer.pipe(
-  Layer.provide(OpenAILive),
+const MainLive = Layer.mergeAll(NodeContext.layer, OpenAILive).pipe(
   Layer.provide(TracingLive),
   Layer.provide(ConfigProviderLive)
 )

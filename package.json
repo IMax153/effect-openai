@@ -33,19 +33,19 @@
     "build": "tsup"
   },
   "dependencies": {
-    "@effect/cli": "^0.28.8",
-    "@effect/experimental": "^0.6.5",
-    "@effect/opentelemetry": "^0.30.6",
-    "@effect/platform": "^0.42.2",
-    "@effect/platform-node": "^0.41.3",
-    "@effect/schema": "^0.60.2",
+    "@effect/cli": "^0.30.1",
+    "@effect/experimental": "^0.6.8",
+    "@effect/opentelemetry": "^0.30.7",
+    "@effect/platform": "^0.42.4",
+    "@effect/platform-node": "^0.41.5",
+    "@effect/schema": "^0.60.4",
     "@opentelemetry/exporter-prometheus": "^0.47.0",
     "@opentelemetry/exporter-trace-otlp-grpc": "^0.47.0",
     "@opentelemetry/sdk-trace-node": "^1.20.0",
     "@sqlfx/sql": "^0.41.0",
     "@sqlfx/sqlite": "^0.41.0",
     "better-sqlite3": "^9.3.0",
-    "effect": "2.1.0",
+    "effect": "2.1.1",
     "openai": "^4.24.7",
     "tiktoken-node": "^0.0.6"
   },
@@ -54,10 +54,10 @@
     "@changesets/cli": "^2.27.1",
     "@effect/eslint-plugin": "^0.1.2",
     "@effect/language-service": "^0.1.0",
-    "@types/node": "^20.11.3",
+    "@types/node": "^20.11.5",
     "@typescript-eslint/eslint-plugin": "^6.19.0",
     "@typescript-eslint/parser": "^6.19.0",
-    "@vitest/coverage-v8": "^1.2.0",
+    "@vitest/coverage-v8": "^1.2.1",
     "eslint": "^8.56.0",
     "eslint-import-resolver-typescript": "^3.6.1",
     "eslint-plugin-codegen": "^0.21.0",
@@ -70,6 +70,6 @@
     "tsx": "^4.7.0",
     "typescript": "^5.3.3",
     "vite": "^5.0.11",
-    "vitest": "^1.2.0"
+    "vitest": "^1.2.1"
   }
 }

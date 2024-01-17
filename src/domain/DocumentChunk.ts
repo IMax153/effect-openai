@@ -1,7 +1,7 @@
 import * as Schema from "@effect/schema/Schema"
 import * as Hash from "effect/Hash"
 import * as Option from "effect/Option"
-import TikToken from "tiktoken-node"
+import * as TikToken from "tiktoken-node"
 import * as AbsolutePath from "./AbsolutePath.js"
 import * as Embedding from "./Embedding.js"
 

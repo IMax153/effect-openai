@@ -46,7 +46,7 @@ const CommandEnvLive = (embeddings: AbsolutePath) =>
 // =============================================================================
 
 const embeddingsDatabase = Options.file("db").pipe(
-  Options.mapOrFail((databasePath) => resolvePath(databasePath)),
+  Options.mapEffect((databasePath) => resolvePath(databasePath)),
   Options.withSchema(AbsolutePath)
 )
 
@@ -55,7 +55,7 @@ const embeddingsDatabase = Options.file("db").pipe(
 // =============================================================================
 
 const documents = Args.fileText({ name: "document" }).pipe(
-  Args.mapOrFail(([documentPath, content]) =>
+  Args.mapEffect(([documentPath, content]) =>
     Effect.all({
       path: resolvePath(documentPath),
       content: Effect.succeed(content)
