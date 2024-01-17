@@ -35,11 +35,19 @@
   "dependencies": {
     "@effect/cli": "^0.28.8",
     "@effect/experimental": "^0.6.5",
+    "@effect/opentelemetry": "^0.30.6",
     "@effect/platform": "^0.42.2",
     "@effect/platform-node": "^0.41.3",
     "@effect/schema": "^0.60.2",
+    "@opentelemetry/exporter-prometheus": "^0.47.0",
+    "@opentelemetry/exporter-trace-otlp-grpc": "^0.47.0",
+    "@opentelemetry/sdk-trace-node": "^1.20.0",
+    "@sqlfx/sql": "^0.41.0",
+    "@sqlfx/sqlite": "^0.41.0",
+    "better-sqlite3": "^9.3.0",
     "effect": "2.1.0",
-    "openai": "^4.24.7"
+    "openai": "^4.24.7",
+    "tiktoken-node": "^0.0.6"
   },
   "devDependencies": {
     "@changesets/changelog-github": "^0.5.0",

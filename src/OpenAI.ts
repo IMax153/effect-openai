@@ -80,7 +80,7 @@ export interface OpenAI {
   readonly _: unique symbol
 }
 
-export const OpenAI = Context.Tag<OpenAI, ReturnType<typeof make>>()
+export const OpenAI = Context.Tag<OpenAI, Effect.Effect.Success<ReturnType<typeof make>>>()
 
 export const makeLayer = (config: Config.Config.Wrap<OpenAIOptions>) =>
-  Layer.effect(OpenAI, Effect.map(Config.unwrap(config), make))
+  Layer.effect(OpenAI, Effect.flatMap(Config.unwrap(config), make))

@@ -37,8 +37,8 @@
     "incremental": true,
     "removeComments": false,
     "paths": {
-      "@effect/docgen": ["./src/index.js"],
-      "@effect/docgen/*": ["./src/*.js"]
+      "@effect/openai": ["./src/index.js"],
+      "@effect/openai/*": ["./src/*.js"]
     },
     "types": ["node"],
     "plugins": [
