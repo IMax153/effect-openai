@@ -46,9 +46,10 @@ const make = Effect.gen(function*(_) {
       Schema.number,
       Embedding.FromSql,
       (id) =>
-        sql<any>`SELECT rowid, embedding FROM vss_chunks WHERE rowid = ${id}`.pipe(
-          Effect.map((_) => _.map(({ embedding }) => embedding))
-        )
+        sql<{ embedding: Uint8Array }>`SELECT rowid, embedding FROM vss_chunks WHERE rowid = ${id}`
+          .pipe(
+            Effect.map((_) => _.map(({ embedding }) => embedding))
+          )
     ),
     Effect.withSpan("DocumentChunkRepository.setEmbeddings")
   )
@@ -57,11 +58,11 @@ const make = Effect.gen(function*(_) {
     sql.voidSchema(
       Schema.struct({
         id: Schema.number,
-        embeddings: Embedding.Embeddings
+        embeddings: Embedding.FromSql
       }),
       ({ embeddings, id }) =>
         sql`INSERT INTO vss_chunks(rowid, embedding)
-          VALUES (${id}, '[${embeddings.join(",")}'])`
+          VALUES (${id}, ${embeddings})`
     ),
     Effect.withSpan("DocumentChunkRepository.setEmbeddings")
   )
@@ -96,7 +97,7 @@ const make = Effect.gen(function*(_) {
               Effect.as(chunk),
               Effect.annotateLogs("chunkId", chunk.id.toString())
             ),
-          onSome: () => Effect.succeed(chunk)
+          onSome: (_) => Effect.succeed(chunk)
         })
       ),
       Effect.mapError((error) => new DocumentChunkRepositoryError({ method: "upsert", error })),
@@ -122,6 +123,7 @@ const make = Effect.gen(function*(_) {
 
   return {
     removeExtraneous,
+    getEmbeddings,
     setEmbeddings,
     upsert
   } as const

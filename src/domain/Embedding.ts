@@ -1,5 +1,4 @@
 import * as ExperimentalRequestResolver from "@effect/experimental/RequestResolver"
-import * as ParseResult from "@effect/schema/ParseResult"
 import * as Schema from "@effect/schema/Schema"
 import * as Context from "effect/Context"
 import * as Duration from "effect/Duration"
@@ -10,8 +9,14 @@ import * as RequestResolver from "effect/RequestResolver"
 import * as Schedule from "effect/Schedule"
 import * as OpenAI from "../OpenAI.js"
 
-export const Embeddings = Schema.array(Schema.number)
-export const FromSql = Schema.parseJson(Embeddings)
+export const Embeddings = Schema.instanceOf(Float32Array)
+export const FromSql = Schema.Uint8ArrayFromSelf.pipe(
+  Schema.transform(
+    Embeddings,
+    (_) => new Float32Array(_.buffer, _.byteOffset, _.byteLength / 4),
+    (_) => new Uint8Array(_.buffer, _.byteOffset, _.byteLength)
+  )
+)
 
 const retryPolicy = Schedule.fixed(Duration.millis(100)).pipe(
   Schedule.compose(Schedule.recurs(3))
@@ -21,7 +26,7 @@ const make = Effect.gen(function*(_) {
   const openai = yield* _(OpenAI.OpenAI)
   const cache = yield* _(Request.makeCache({ capacity: 5000, timeToLive: "1 days" }))
 
-  interface EmbeddingRequest extends Request.Request<OpenAI.OpenAIError, ReadonlyArray<number>> {
+  interface EmbeddingRequest extends Request.Request<OpenAI.OpenAIError, Float32Array> {
     readonly _tag: "EmbeddingRequest"
     readonly input: string
   }
@@ -45,7 +50,7 @@ const make = Effect.gen(function*(_) {
         Effect.flatMap((results) =>
           Effect.forEach(
             results,
-            ({ embedding, index }) => Request.succeed(requests[index], embedding),
+            ({ embedding, index }) => Request.succeed(requests[index], new Float32Array(embedding)),
             { discard: true }
           )
         ),
