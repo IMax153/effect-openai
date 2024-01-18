@@ -51,7 +51,7 @@ const make = Effect.gen(function*(_) {
             Effect.map((_) => _.map(({ embedding }) => embedding))
           )
     ),
-    Effect.withSpan("DocumentChunkRepository.setEmbeddings")
+    Effect.withSpan("DocumentChunkRepository.getEmbeddings")
   )
 
   const setEmbeddings = flow(
