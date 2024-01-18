@@ -21,10 +21,6 @@ export declare namespace RateLimiter {
   }
 }
 
-const rateLimiterProto = {
-  [RateLimiterTypeId]: RateLimiterTypeId
-}
-
 export const make = (
   limit: number,
   window: Duration.DurationInput
