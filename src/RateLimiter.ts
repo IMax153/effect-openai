@@ -7,8 +7,22 @@ import * as Queue from "effect/Queue"
 import * as Ref from "effect/Ref"
 import type * as Scope from "effect/Scope"
 
-export interface RateLimiter {
+export const RateLimiterTypeId = Symbol.for("@effect/openai/RateLimiter")
+
+export type RateLimiterTypeId = typeof RateLimiterTypeId
+
+export interface RateLimiter extends RateLimiter.Proto {
   readonly take: Effect.Effect<never, never, void>
+}
+
+export declare namespace RateLimiter {
+  export interface Proto {
+    readonly [RateLimiterTypeId]: RateLimiterTypeId
+  }
+}
+
+const rateLimiterProto = {
+  [RateLimiterTypeId]: RateLimiterTypeId
 }
 
 export const make = (
@@ -63,7 +77,7 @@ export const make = (
 
     yield* _(Effect.forkIn(worker, scope))
 
-    return {
+    return Object.setPrototypeOf({
       take: Deferred.make<never, void>().pipe(
         Effect.tap((deferred) => Queue.offer(queue, deferred)),
         Effect.flatMap((deferred) =>
@@ -72,5 +86,5 @@ export const make = (
           )
         )
       )
-    }
+    }, rateLimiterProto)
   })
