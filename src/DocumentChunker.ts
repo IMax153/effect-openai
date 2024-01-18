@@ -5,9 +5,9 @@ import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as ReadonlyArray from "effect/ReadonlyArray"
 import * as String from "effect/String"
+import * as DocumentChunkRepository from "./DocumentChunkRepository.js"
 import type * as Document from "./domain/Document.js"
 import * as DocumentChunk from "./domain/DocumentChunk.js"
-import * as DocumentChunkRepository from "./domain/DocumentChunkRepository.js"
 
 export const make = Effect.gen(function*(_) {
   const repository = yield* _(DocumentChunkRepository.DocumentChunkRepository)

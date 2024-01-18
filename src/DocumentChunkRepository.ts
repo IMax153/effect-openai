@@ -12,9 +12,9 @@ import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Predicate from "effect/Predicate"
 import * as ReadonlyArray from "effect/ReadonlyArray"
-import * as DocumentChunk from "../domain/DocumentChunk.js"
-import type * as OpenAI from "../OpenAI.js"
-import * as Embedding from "./Embedding.js"
+import * as DocumentChunk from "./domain/DocumentChunk.js"
+import * as Embedding from "./Embeddings.js"
+import type * as OpenAI from "./OpenAI.js"
 
 export class DocumentChunkRepositoryError extends Data.TaggedError("DocumentChunkRepositoryError")<{
   readonly method: string
@@ -42,7 +42,7 @@ export const DocumentChunkForInsert = DocumentChunk.DocumentChunk.struct.pipe(
 export type ChunkForInsert = Schema.Schema.To<typeof DocumentChunkForInsert>
 
 const make = Effect.gen(function*(_) {
-  const embedding = yield* _(Embedding.Embedding)
+  const embedding = yield* _(Embedding.Embeddings)
   const sql = yield* _(SQLite.tag)
 
   const getEmbeddings = flow(
@@ -135,17 +135,17 @@ const make = Effect.gen(function*(_) {
       DocumentChunk.DocumentChunk,
       ({ embedding, limit = 35 }) =>
         sql`
-        with matches as (
-          select rowid, distance
-          from vss_chunks
-          where vss_search(embedding, ${embedding})
-          order by distance
-          limit ${limit}
-        )
-        select document_chunks.*
-        from matches
-        left join document_chunks on document_chunks.id = matches.rowid
-      `
+          WITH matches AS (
+            SELECT rowid, distance
+            FROM vss_chunks
+            WHERE vss_search(embedding, ${embedding})
+            ORDER BY distance
+            LIMIT ${limit}
+          )
+          SELECT document_chunks.*
+          FROM matches
+          LEFT join document_chunks on document_chunks.id = matches.rowid
+        `
     ),
     Effect.withSpan("DocumentChunkRepository.searchByEmbedding")
   )
@@ -153,12 +153,7 @@ const make = Effect.gen(function*(_) {
   const search = (query: string, limit?: number) =>
     embedding.single(query).pipe(
       Effect.flatMap((embedding) => searchByEmbedding({ embedding, limit })),
-      Effect.withSpan("DocumentChunkRepository.search", {
-        attributes: {
-          query,
-          limit
-        }
-      })
+      Effect.withSpan("DocumentChunkRepository.search", { attributes: { query, limit } })
     )
 
   return {
@@ -181,5 +176,5 @@ export const DocumentChunkRepository = Context.Tag<
 
 export const DocumentChunkRepositoryLive = Layer.provide(
   Layer.scoped(DocumentChunkRepository, make),
-  Embedding.EmbeddingLive
+  Embedding.EmbeddingsLive
 )

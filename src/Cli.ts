@@ -10,10 +10,12 @@ import * as Layer from "effect/Layer"
 import * as NodePath from "node:path"
 import * as Vss from "sqlite-vss"
 import { fileURLToPath } from "url"
+import * as Completions from "./Completions.js"
 import * as DocumentChunker from "./DocumentChunker.js"
+import * as DocumentChunkerRepo from "./DocumentChunkRepository.js"
 import { AbsolutePath } from "./domain/AbsolutePath.js"
+import { CompletionRequest } from "./domain/CompletionRequest.js"
 import { Document } from "./domain/Document.js"
-import * as DocumentChunkerRepo from "./domain/DocumentChunkRepository.js"
 import { moduleVersion } from "./internal/version.js"
 
 // TODO: fix
@@ -45,6 +47,7 @@ const MigratorLive = Migrator.makeLayer({
 
 const CommandEnvLive = (embeddings: AbsolutePath) =>
   Layer.mergeAll(
+    Completions.CompletionsLive,
     DocumentChunker.DocumentChunkerLive,
     DocumentChunkerRepo.DocumentChunkRepositoryLive,
     MigratorLive
@@ -119,9 +122,10 @@ const promptCommand = Command.make("prompt", {
 }).pipe(
   Command.withHandler(({ prompt }) =>
     Effect.gen(function*(_) {
+      const completions = yield* _(Completions.Completions)
       const repo = yield* _(DocumentChunkerRepo.DocumentChunkRepository)
       const chunks = yield* _(repo.search(prompt))
-      console.log(chunks)
+      completions.create(new CompletionRequest({/* TODO */}))
     })
   ),
   Command.provide(({ embeddings }) => CommandEnvLive(embeddings))

@@ -7,12 +7,11 @@ import * as Layer from "effect/Layer"
 import * as Request from "effect/Request"
 import * as RequestResolver from "effect/RequestResolver"
 import * as Schedule from "effect/Schedule"
-import * as OpenAI from "../OpenAI.js"
+import * as OpenAI from "./OpenAI.js"
 
-export const Embeddings = Schema.instanceOf(Float32Array)
 export const FromSql = Schema.Uint8ArrayFromSelf.pipe(
   Schema.transform(
-    Embeddings,
+    Schema.instanceOf(Float32Array),
     (_) => new Float32Array(_.buffer, _.byteOffset, _.byteLength / 4),
     (_) => new Uint8Array(_.buffer, _.byteOffset, _.byteLength)
   )
@@ -81,10 +80,10 @@ const make = Effect.gen(function*(_) {
   return { single, batched } as const
 })
 
-export interface Embedding {
+export interface Embeddings {
   readonly _: unique symbol
 }
 
-export const Embedding = Context.Tag<Embedding, Effect.Effect.Success<typeof make>>()
+export const Embeddings = Context.Tag<Embeddings, Effect.Effect.Success<typeof make>>()
 
-export const EmbeddingLive = Layer.scoped(Embedding, make)
+export const EmbeddingsLive = Layer.scoped(Embeddings, make)
