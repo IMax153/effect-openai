@@ -77,7 +77,8 @@ export const make = (
 
     yield* _(Effect.forkIn(worker, scope))
 
-    return Object.setPrototypeOf({
+    return {
+      [RateLimiterTypeId]: RateLimiterTypeId,
       take: Deferred.make<never, void>().pipe(
         Effect.tap((deferred) => Queue.offer(queue, deferred)),
         Effect.flatMap((deferred) =>
@@ -86,5 +87,5 @@ export const make = (
           )
         )
       )
-    }, rateLimiterProto)
+    }
   })
