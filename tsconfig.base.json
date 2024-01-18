@@ -3,7 +3,6 @@
   "compilerOptions": {
     "strict": true,
     "moduleDetection": "force",
-    "composite": true,
     "downlevelIteration": true,
     "resolveJsonModule": true,
     "esModuleInterop": false,
