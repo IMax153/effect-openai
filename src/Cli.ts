@@ -48,7 +48,8 @@ const CommandEnvLive = (embeddings: AbsolutePath) =>
     MigratorLive
   ).pipe(
     Layer.provide(VSSLive),
-    Layer.provide(SQLiteLive(embeddings)))
+    Layer.provide(SQLiteLive(embeddings))
+  )
 
 // =============================================================================
 // Common Options & Arguments
