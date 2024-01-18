@@ -6,7 +6,6 @@
     "downlevelIteration": true,
     "resolveJsonModule": true,
     "esModuleInterop": false,
-    "declaration": true,
     "skipLibCheck": true,
     "exactOptionalPropertyTypes": true,
     "emitDecoratorMetadata": false,
