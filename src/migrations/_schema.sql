@@ -19,11 +19,11 @@ CREATE UNIQUE INDEX document_chunks_content_hash_idx
     ON
       document_chunks (content_hash);
 CREATE VIRTUAL TABLE vss_chunks USING vss0(
-    embedding(1356)
+    embedding(1536)
   );
 CREATE TABLE IF NOT EXISTS "vss_chunks_index"(rowid integer primary key autoincrement, idx);
 CREATE TABLE IF NOT EXISTS "vss_chunks_data"(rowid integer primary key autoincrement, _);
 
-INSERT INTO sqlfx_migrations VALUES(1,'2024-01-18 00:16:29','create_document_chunks');
-INSERT INTO sqlfx_migrations VALUES(2,'2024-01-18 00:16:29','document_chunk_unique_index');
-INSERT INTO sqlfx_migrations VALUES(3,'2024-01-18 00:16:29','create_vss_chunks');
+INSERT INTO sqlfx_migrations VALUES(1,'2024-01-18 00:38:19','create_document_chunks');
+INSERT INTO sqlfx_migrations VALUES(2,'2024-01-18 00:38:19','document_chunk_unique_index');
+INSERT INTO sqlfx_migrations VALUES(3,'2024-01-18 00:38:19','create_vss_chunks');

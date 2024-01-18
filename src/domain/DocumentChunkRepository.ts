@@ -121,11 +121,47 @@ const make = Effect.gen(function*(_) {
       Effect.withSpan("DocumentChunkRepository.removeExtraneous")
     )
 
+  const searchByEmbedding = flow(
+    sql.schema(
+      Schema.struct({
+        embedding: Embedding.FromSql,
+        limit: Schema.optional(Schema.number)
+      }),
+      DocumentChunk.DocumentChunk,
+      ({ embedding, limit = 35 }) =>
+        sql`
+        with matches as (
+          select rowid, distance
+          from vss_chunks
+          where vss_search(embedding, ${embedding})
+          order by distance
+          limit ${limit}
+        )
+        select document_chunks.*
+        from matches
+        left join document_chunks on document_chunks.id = matches.rowid
+      `
+    ),
+    Effect.withSpan("DocumentChunkRepository.searchByEmbedding")
+  )
+
+  const search = (query: string, limit?: number) =>
+    embedding.single(query).pipe(
+      Effect.flatMap((embedding) => searchByEmbedding({ embedding, limit })),
+      Effect.withSpan("DocumentChunkRepository.search", {
+        attributes: {
+          query,
+          limit
+        }
+      })
+    )
+
   return {
     removeExtraneous,
     getEmbeddings,
     setEmbeddings,
-    upsert
+    upsert,
+    search
   } as const
 })
 

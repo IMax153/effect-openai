@@ -13,6 +13,7 @@ import { fileURLToPath } from "url"
 import * as DocumentChunker from "./DocumentChunker.js"
 import { AbsolutePath } from "./domain/AbsolutePath.js"
 import { Document } from "./domain/Document.js"
+import * as DocumentChunkerRepo from "./domain/DocumentChunkRepository.js"
 import { moduleVersion } from "./internal/version.js"
 
 // TODO: fix
@@ -45,6 +46,7 @@ const MigratorLive = Migrator.makeLayer({
 const CommandEnvLive = (embeddings: AbsolutePath) =>
   Layer.mergeAll(
     DocumentChunker.DocumentChunkerLive,
+    DocumentChunkerRepo.DocumentChunkRepositoryLive,
     MigratorLive
   ).pipe(
     Layer.provide(VSSLive),
@@ -115,6 +117,13 @@ const promptCommand = Command.make("prompt", {
     )
   )
 }).pipe(
+  Command.withHandler(({ prompt }) =>
+    Effect.gen(function*(_) {
+      const repo = yield* _(DocumentChunkerRepo.DocumentChunkRepository)
+      const chunks = yield* _(repo.search(prompt))
+      console.log(chunks)
+    })
+  ),
   Command.provide(({ embeddings }) => CommandEnvLive(embeddings))
 )
 
