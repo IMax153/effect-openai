@@ -7,3 +7,5 @@ dist/
 .direnv/
 .env
 *.sqlite
+*.sqlite-shm
+*.sqlite-wal

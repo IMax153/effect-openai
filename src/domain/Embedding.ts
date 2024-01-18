@@ -44,22 +44,21 @@ const make = Effect.gen(function*(_) {
       Effect.withSpan("Embeddings.createEmbedding")
     )
 
-  const resolver = RequestResolver.makeBatched(
-    (requests: Array<EmbeddingRequest>) =>
-      createEmbedding(requests).pipe(
-        Effect.flatMap((results) =>
-          Effect.forEach(
-            results,
-            ({ embedding, index }) => Request.succeed(requests[index], new Float32Array(embedding)),
-            { discard: true }
-          )
-        ),
-        Effect.catchAll((error) =>
-          Effect.forEach(requests, (request) => Request.fail(request, error), {
-            discard: true
-          })
+  const resolver = RequestResolver.makeBatched((requests: Array<EmbeddingRequest>) =>
+    createEmbedding(requests).pipe(
+      Effect.flatMap((results) =>
+        Effect.forEach(
+          results,
+          ({ embedding, index }) => Request.succeed(requests[index], new Float32Array(embedding)),
+          { discard: true }
         )
+      ),
+      Effect.catchAll((error) =>
+        Effect.forEach(requests, (request) => Request.fail(request, error), {
+          discard: true
+        })
       )
+    )
   )
 
   const resolverDelayed = yield* _(ExperimentalRequestResolver.dataLoader(

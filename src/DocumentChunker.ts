@@ -53,7 +53,7 @@ export const DocumentChunkerLive = Layer.effect(DocumentChunker, make).pipe(
 )
 
 const splitTitle = (content: string) => {
-  const chunks = content.split(/^#\s+/m)
+  const chunks = content.split(/^#+\s+/m)
 
   if (chunks.length === 1) {
     return [

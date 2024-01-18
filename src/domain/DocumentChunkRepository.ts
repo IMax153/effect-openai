@@ -3,13 +3,15 @@ import { TreeFormatter } from "@effect/schema"
 import * as Schema from "@effect/schema/Schema"
 import * as SQLite from "@sqlfx/sqlite/Client"
 import type * as SqlError from "@sqlfx/sqlite/Error"
-import { Inspectable } from "effect"
 import * as Context from "effect/Context"
 import * as Data from "effect/Data"
 import * as Effect from "effect/Effect"
 import { flow } from "effect/Function"
+import * as Inspectable from "effect/Inspectable"
 import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
+import * as Predicate from "effect/Predicate"
+import * as ReadonlyArray from "effect/ReadonlyArray"
 import * as DocumentChunk from "../domain/DocumentChunk.js"
 import type * as OpenAI from "../OpenAI.js"
 import * as Embedding from "./Embedding.js"
@@ -23,8 +25,10 @@ export class DocumentChunkRepositoryError extends Data.TaggedError("DocumentChun
     | SqlError.ResultLengthMismatch
 }> {
   get message() {
-    const message = this.error._tag === "SchemaError"
+    const message = Predicate.isTagged(this.error, "SchemaError")
       ? TreeFormatter.formatIssue(this.error.error)
+      : Predicate.isTagged(this.error, "OpenAIError")
+      ? Inspectable.format(this.error.error)
       : "message" in this.error
       ? this.error.message
       : Inspectable.format(this.error)
@@ -46,10 +50,11 @@ const make = Effect.gen(function*(_) {
       Schema.number,
       Embedding.FromSql,
       (id) =>
-        sql<{ embedding: Uint8Array }>`SELECT rowid, embedding FROM vss_chunks WHERE rowid = ${id}`
-          .pipe(
-            Effect.map((_) => _.map(({ embedding }) => embedding))
-          )
+        sql<{ embedding: Uint8Array }>`
+          SELECT rowid, embedding
+          FROM vss_chunks
+          WHERE rowid = ${id}
+        `.pipe(Effect.map(ReadonlyArray.map(({ embedding }) => embedding)))
     ),
     Effect.withSpan("DocumentChunkRepository.getEmbeddings")
   )
@@ -88,8 +93,8 @@ const make = Effect.gen(function*(_) {
     upsertDebounced(chunk).pipe(
       Effect.bindTo("chunk"),
       Effect.bind("embeddings", ({ chunk }) => getEmbeddings(chunk.id)),
-      Effect.flatMap(({ chunk, embeddings }) =>
-        Option.match(embeddings, {
+      Effect.flatMap(({ chunk, embeddings }) => {
+        return Option.match(embeddings, {
           onNone: () =>
             Effect.log("Generating embeddings").pipe(
               Effect.zipRight(embedding.batched(chunk.fullContent)),
@@ -97,9 +102,9 @@ const make = Effect.gen(function*(_) {
               Effect.as(chunk),
               Effect.annotateLogs("chunkId", chunk.id.toString())
             ),
-          onSome: (_) => Effect.succeed(chunk)
+          onSome: () => Effect.succeed(chunk)
         })
-      ),
+      }),
       Effect.mapError((error) => new DocumentChunkRepositoryError({ method: "upsert", error })),
       Effect.withSpan("DocumentChunkRepository.upsert", {
         attributes: {

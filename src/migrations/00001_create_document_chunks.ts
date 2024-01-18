@@ -1,4 +1,3 @@
-import * as _Connection from "@sqlfx/sql/Connection"
 import * as SQLite from "@sqlfx/sqlite/Client"
 import * as Effect from "effect/Effect"
 

@@ -19,7 +19,7 @@ export interface OpenAIOptions {
 
 const handleError = (error: unknown) =>
   new OpenAIError({
-    error: (error as any).response?.data?.error ?? error
+    error: (error as any).error?.message ?? error
   })
 
 const make = (options: OpenAIOptions) =>
