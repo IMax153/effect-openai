@@ -18,7 +18,6 @@ import { CompletionModels, CompletionRequest } from "./domain/CompletionRequest.
 import { Document } from "./domain/Document.js"
 import { moduleVersion } from "./internal/version.js"
 
-// TODO: fix
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = NodePath.dirname(__filename)
 
@@ -43,7 +42,6 @@ const SQLiteLive = (embeddings: AbsolutePath) =>
   )
 
 const MigratorLive = Migrator.makeLayer({
-  // TODO: improve
   loader: Migrator.fromDisk(`${__dirname}/migrations`),
   schemaDirectory: "src/migrations"
 })
@@ -53,9 +51,7 @@ const CommandEnvLive = (embeddings: AbsolutePath) =>
     Completions.CompletionsLive,
     DocumentChunker.DocumentChunkerLive,
     MigratorLive
-  ).pipe(
-    Layer.provide(SQLiteLive(embeddings))
-  )
+  ).pipe(Layer.provide(SQLiteLive(embeddings)))
 
 // =============================================================================
 // Common Options & Arguments
@@ -132,20 +128,15 @@ const promptCommand = Command.make("prompt", {
       const completions = yield* _(Completions.Completions)
       const stream = completions.create(
         new CompletionRequest({
-          input: [{
-            role: "user",
-            content: prompt
-          }],
+          input: [{ role: "user", content: prompt }],
           model
         })
       )
-
       yield* _(
         stream,
-        Stream.runForEach((_) => Effect.sync(() => process.stdout.write(_)))
+        Stream.runForEach((output) => Effect.sync(() => process.stdout.write(output))),
+        Effect.zipRight(Effect.sync(() => process.stdout.write("\n")))
       )
-
-      console.log("")
     })
   ),
   Command.provide(({ embeddings }) => CommandEnvLive(embeddings))

@@ -7,6 +7,7 @@ import * as Option from "effect/Option"
 import * as Secret from "effect/Secret"
 import * as Stream from "effect/Stream"
 import { OpenAI as OpenAIApi } from "openai"
+import * as RateLimiter from "./RateLimiter.js"
 
 export class OpenAIError extends Data.TaggedError("OpenAIError")<{
   readonly error: unknown
@@ -24,6 +25,13 @@ const handleError = (error: unknown) =>
 
 const make = (options: OpenAIOptions) =>
   Effect.gen(function*(_) {
+    // For now, we just create a simple rate limiter to enforce the 5000 request
+    // per minute rate limit we have with OpenAI. However, the rate limiter
+    // factory is flexible enough to allow us to create separate rate limiters
+    // for different use cases.
+    const factory = yield* _(RateLimiter.Factory)
+    const rateLimiter = yield* _(factory.make(5000, "1 minutes"))
+
     const client = yield* _(Effect.sync(() =>
       new OpenAIApi({
         apiKey: Secret.value(options.apiKey),
@@ -35,10 +43,13 @@ const make = (options: OpenAIOptions) =>
     ))
 
     const call = <A>(f: (api: OpenAIApi, signal: AbortSignal) => Promise<A>) =>
-      Effect.tryPromise({
-        try: (signal) => f(client, signal),
-        catch: handleError
-      }).pipe(Effect.withSpan("OpenAI.call"))
+      rateLimiter.take.pipe(
+        Effect.zipRight(Effect.tryPromise({
+          try: (signal) => f(client, signal),
+          catch: handleError
+        })),
+        Effect.withSpan("OpenAI.call")
+      )
 
     const completion = (options: {
       readonly model: string
@@ -83,4 +94,6 @@ export interface OpenAI {
 export const OpenAI = Context.Tag<OpenAI, Effect.Effect.Success<ReturnType<typeof make>>>()
 
 export const makeLayer = (config: Config.Config.Wrap<OpenAIOptions>) =>
-  Layer.effect(OpenAI, Effect.flatMap(Config.unwrap(config), make))
+  Layer.scoped(OpenAI, Config.unwrap(config).pipe(Effect.flatMap(make))).pipe(
+    Layer.provide(RateLimiter.FactoryLive)
+  )
