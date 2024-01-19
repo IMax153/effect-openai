@@ -59,15 +59,18 @@ export const make = Effect.gen(function*(_) {
       }
 
       return stream
-    }).pipe(Effect.withSpan("Completions.create", {
-      attributes: {
-        input: pipe(
-          ReadonlyArray.last(request.input),
-          Option.map((_) => _.content),
-          Option.getOrElse(() => "")
-        )
-      }
-    }))
+    }).pipe(
+      Stream.unwrap,
+      Stream.withSpan("Completions.create", {
+        attributes: {
+          input: pipe(
+            ReadonlyArray.last(request.input),
+            Option.map((_) => _.content),
+            Option.getOrElse(() => "")
+          )
+        }
+      })
+    )
 
   const context = (request: CompletionRequest.CompletionRequest) =>
     pipe(

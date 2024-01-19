@@ -7,14 +7,14 @@ import * as SQLite from "@sqlfx/sqlite/node"
 import * as Config from "effect/Config"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
+import * as Stream from "effect/Stream"
 import * as NodePath from "node:path"
 import * as Vss from "sqlite-vss"
 import { fileURLToPath } from "url"
 import * as Completions from "./Completions.js"
 import * as DocumentChunker from "./DocumentChunker.js"
-import * as DocumentChunkerRepo from "./DocumentChunkRepository.js"
 import { AbsolutePath } from "./domain/AbsolutePath.js"
-import { CompletionRequest } from "./domain/CompletionRequest.js"
+import { CompletionModels, CompletionRequest } from "./domain/CompletionRequest.js"
 import { Document } from "./domain/Document.js"
 import { moduleVersion } from "./internal/version.js"
 
@@ -26,18 +26,21 @@ const __dirname = NodePath.dirname(__filename)
 // Command Environment
 // =============================================================================
 
-const SQLiteLive = (embeddings: AbsolutePath) =>
-  SQLite.makeLayer({
-    filename: Config.succeed(embeddings),
-    transformQueryNames: Config.succeed(SQLite.transform.camelToSnake),
-    transformResultNames: Config.succeed(SQLite.transform.snakeToCamel)
-  })
-
 const VSSLive = Layer.effectDiscard(Effect.gen(function*(_) {
   const sql = yield* _(SQLite.tag)
   yield* _(sql.loadExtension((Vss as any).getVectorLoadablePath()))
   yield* _(sql.loadExtension((Vss as any).getVssLoadablePath()))
 }))
+
+const SQLiteLive = (embeddings: AbsolutePath) =>
+  Layer.provideMerge(
+    VSSLive,
+    SQLite.makeLayer({
+      filename: Config.succeed(embeddings),
+      transformQueryNames: Config.succeed(SQLite.transform.camelToSnake),
+      transformResultNames: Config.succeed(SQLite.transform.snakeToCamel)
+    })
+  )
 
 const MigratorLive = Migrator.makeLayer({
   // TODO: improve
@@ -49,10 +52,8 @@ const CommandEnvLive = (embeddings: AbsolutePath) =>
   Layer.mergeAll(
     Completions.CompletionsLive,
     DocumentChunker.DocumentChunkerLive,
-    DocumentChunkerRepo.DocumentChunkRepositoryLive,
     MigratorLive
   ).pipe(
-    Layer.provide(VSSLive),
     Layer.provide(SQLiteLive(embeddings))
   )
 
@@ -111,8 +112,14 @@ const prompt = Args.text({ name: "prompt" }).pipe(
   Args.withDescription("The text prompt to send to OpenAI")
 )
 
+const model = Options.choice("model", CompletionModels).pipe(
+  Options.withDefault("gpt-4-1106-preview"),
+  Options.withDescription("The OpenAI model to use to generate the completion")
+)
+
 const promptCommand = Command.make("prompt", {
   prompt,
+  model,
   embeddings: embeddingsDatabase.pipe(
     Options.withDescription(
       "The path to a SQLite database which contains document embeddings " +
@@ -120,12 +127,25 @@ const promptCommand = Command.make("prompt", {
     )
   )
 }).pipe(
-  Command.withHandler(({ prompt }) =>
+  Command.withHandler(({ model, prompt }) =>
     Effect.gen(function*(_) {
       const completions = yield* _(Completions.Completions)
-      const repo = yield* _(DocumentChunkerRepo.DocumentChunkRepository)
-      const chunks = yield* _(repo.search(prompt))
-      completions.create(new CompletionRequest({/* TODO */}))
+      const stream = completions.create(
+        new CompletionRequest({
+          input: [{
+            role: "user",
+            content: prompt
+          }],
+          model
+        })
+      )
+
+      yield* _(
+        stream,
+        Stream.runForEach((_) => Effect.sync(() => process.stdout.write(_)))
+      )
+
+      console.log("")
     })
   ),
   Command.provide(({ embeddings }) => CommandEnvLive(embeddings))

@@ -9,13 +9,17 @@ const Message = Schema.struct({
   content: Schema.string
 })
 
+export const CompletionModels = [
+  "gpt-3.5-turbo-0613",
+  "gpt-3.5-turbo-16k",
+  "gpt-4-1106-preview"
+] as const
+
+export const CompletionModel = Schema.literal(...CompletionModels)
+
 export class CompletionRequest extends Schema.Class<CompletionRequest>()({
   input: Schema.array(Message),
-  model: Schema.literal(
-    "gpt-3.5-turbo-0613",
-    "gpt-3.5-turbo-16k",
-    "gpt-4-1106-preview"
-  )
+  model: CompletionModel
 }) {
   get contextTokens(): { readonly target: number; readonly max: number } {
     return pipe(

@@ -6,15 +6,13 @@ import * as Layer from "effect/Layer"
 import * as ReadonlyArray from "effect/ReadonlyArray"
 import * as String from "effect/String"
 import TikToken from "tiktoken-node"
-import * as DocumentChunkRepository from "./DocumentChunkRepository.js"
 import type * as DocumentChunk from "./domain/DocumentChunk.js"
+import * as DocumentChunkRepository from "./domain/DocumentChunkRepository.js"
 
 const tokenizer = TikToken.encodingForModel("gpt-3.5-turbo")
 
 const defaultPrefix =
-  `You are a very enthusiastic representative for the Effect libraries, who loves to help people!
-
-Answer any questions in Markdown format, from the following documentation sections:
+  `Answer any questions in Markdown format, from the following document sections:
 ---`
 
 export interface GenerateOptions {
@@ -40,7 +38,7 @@ const make = Effect.gen(function*(_) {
     targetTokens
   }: GenerateOptions) => {
     const requiredTokenCount = tokenizer.encode(`${prefix}\n\n${prompt}`).length
-    const diffOrZero = Math.max(0, maxTokens - targetTokens)
+    const diffOrZero = Math.max(0, requiredTokenCount - (maxTokens - targetTokens))
     const tokensToGenerate = targetTokens - diffOrZero
     return repository.search(prompt).pipe(
       Effect.map((results) => {

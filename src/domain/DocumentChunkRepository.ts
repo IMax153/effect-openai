@@ -12,9 +12,9 @@ import * as Layer from "effect/Layer"
 import * as Option from "effect/Option"
 import * as Predicate from "effect/Predicate"
 import * as ReadonlyArray from "effect/ReadonlyArray"
-import * as DocumentChunk from "./domain/DocumentChunk.js"
-import * as Embedding from "./Embeddings.js"
-import type * as OpenAI from "./OpenAI.js"
+import * as Embedding from "../Embeddings.js"
+import type * as OpenAI from "../OpenAI.js"
+import * as DocumentChunk from "./DocumentChunk.js"
 
 export class DocumentChunkRepositoryError extends Data.TaggedError("DocumentChunkRepositoryError")<{
   readonly method: string
@@ -76,7 +76,7 @@ const make = Effect.gen(function*(_) {
     request: DocumentChunkForInsert,
     result: DocumentChunk.DocumentChunk,
     run: (chunk) =>
-      sql`INSERT INTO document_chunks ${sql.insert(chunk)}
+      sql<any>`INSERT INTO document_chunks ${sql.insert(chunk)}
           ON CONFLICT (content_hash) DO UPDATE
           SET content_hash = EXCLUDED.content_hash
           RETURNING *`
@@ -114,10 +114,10 @@ const make = Effect.gen(function*(_) {
       })
     )
 
-  const removeExtraneous = (hashes: ReadonlyArray<number>) =>
+  const removeExtraneous = (path: string, hashes: ReadonlyArray<number>) =>
     sql`
       DELETE FROM document_chunks
-      WHERE content_hash NOT IN ${sql(hashes)}
+      WHERE path = ${path} AND content_hash NOT IN ${sql(hashes)}
     `.pipe(
       Effect.mapError(
         (error) => new DocumentChunkRepositoryError({ method: "removeExtranous", error })
@@ -139,10 +139,10 @@ const make = Effect.gen(function*(_) {
             SELECT rowid, distance
             FROM vss_chunks
             WHERE vss_search(embedding, ${embedding})
-            ORDER BY distance
+            ORDER BY distance ASC
             LIMIT ${limit}
           )
-          SELECT document_chunks.*
+          SELECT document_chunks.*, matches.distance
           FROM matches
           LEFT join document_chunks on document_chunks.id = matches.rowid
         `
