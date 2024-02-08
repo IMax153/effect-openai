@@ -1,7 +1,11 @@
 import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
+import * as NodeSdk from "@effect/opentelemetry/NodeSdk"
 import * as Path from "@effect/platform-node/Path"
+import { PrometheusExporter } from "@opentelemetry/exporter-prometheus"
+import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
+import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 import * as Migrator from "@sqlfx/sqlite/Migrator/Node"
 import * as SQLite from "@sqlfx/sqlite/node"
 import * as Config from "effect/Config"
@@ -46,11 +50,18 @@ const MigratorLive = Migrator.makeLayer({
   schemaDirectory: "src/migrations"
 })
 
+const TelemetryLive = NodeSdk.layer(() => ({
+  resource: { serviceName: "openai-effect" },
+  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
+  metricReader: new PrometheusExporter()
+}))
+
 const CommandEnvLive = (embeddings: AbsolutePath) =>
   Layer.mergeAll(
     Completions.CompletionsLive,
     DocumentChunker.DocumentChunkerLive,
-    MigratorLive
+    MigratorLive,
+    TelemetryLive
   ).pipe(Layer.provide(SQLiteLive(embeddings)))
 
 // =============================================================================

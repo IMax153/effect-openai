@@ -27,6 +27,7 @@
       devShells = {
         default = pkgs.mkShell {
           buildInputs = with pkgs; [
+            podman
             nodejs_20
             corepackEnable
           ];

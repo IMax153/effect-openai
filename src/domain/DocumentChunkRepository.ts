@@ -46,7 +46,7 @@ const make = Effect.gen(function*(_) {
   const sql = yield* _(SQLite.tag)
 
   const getEmbeddings = flow(
-    sql.singleSchemaOption(
+    sql.schemaSingleOption(
       Schema.number,
       Embedding.FromSql,
       (id) =>
@@ -60,7 +60,7 @@ const make = Effect.gen(function*(_) {
   )
 
   const setEmbeddings = flow(
-    sql.voidSchema(
+    sql.schemaVoid(
       Schema.struct({
         id: Schema.number,
         embeddings: Embedding.FromSql
