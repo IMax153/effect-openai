@@ -1,27 +1,11 @@
-import * as Context from "effect/Context"
-import * as Deferred from "effect/Deferred"
-import type * as Duration from "effect/Duration"
-import * as Effect from "effect/Effect"
-import * as Fiber from "effect/Fiber"
-import * as Layer from "effect/Layer"
-import * as Option from "effect/Option"
-import * as Queue from "effect/Queue"
-import * as Ref from "effect/Ref"
-import type * as Scope from "effect/Scope"
+import type { Duration, Scope } from "effect"
+import { Context, Deferred, Effect, Fiber, Layer, Option, Queue, Ref } from "effect"
 
-export const RateLimiterTypeId = Symbol.for("@effect/openai/RateLimiter")
-
-export type RateLimiterTypeId = typeof RateLimiterTypeId
-
-export interface RateLimiter extends RateLimiter.Proto {
+export interface RateLimiter {
   readonly take: Effect.Effect<never, never, void>
 }
 
 export declare namespace RateLimiter {
-  export interface Proto {
-    readonly [RateLimiterTypeId]: RateLimiterTypeId
-  }
-
   export interface Factory {
     readonly make: (
       limit: number,
@@ -34,7 +18,9 @@ export const Factory = Context.Tag<RateLimiter.Factory>()
 
 export const FactoryLive = Layer.sync(Factory, () => factory)
 
-export const factory = Factory.of({
+export const make = Effect.serviceFunctionEffect(Factory, (factory) => factory.make)
+
+const factory = Factory.of({
   make: (limit, window) =>
     Effect.gen(function*(_) {
       const counter = yield* _(Ref.make(limit))
@@ -65,7 +51,7 @@ export const factory = Factory.of({
             return Ref.get(resetRef).pipe(
               Effect.map(Option.match({
                 onNone: () => Effect.unit,
-                onSome: (fiber) => Fiber.await(fiber)
+                onSome: (fiber) => Effect.asUnit(Fiber.await(fiber))
               })),
               Effect.zipRight(Queue.takeBetween(queue, 1, limit))
             )
@@ -85,7 +71,6 @@ export const factory = Factory.of({
       yield* _(Effect.forkIn(worker, scope))
 
       return {
-        [RateLimiterTypeId]: RateLimiterTypeId,
         take: Deferred.make<never, void>().pipe(
           Effect.tap((deferred) => Queue.offer(queue, deferred)),
           Effect.flatMap((deferred) =>

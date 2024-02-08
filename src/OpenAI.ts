@@ -29,8 +29,7 @@ const make = (options: OpenAIOptions) =>
     // per minute rate limit we have with OpenAI. However, the rate limiter
     // factory is flexible enough to allow us to create separate rate limiters
     // for different use cases.
-    const factory = yield* _(RateLimiter.Factory)
-    const rateLimiter = yield* _(factory.make(5000, "1 minutes"))
+    const rateLimiter = yield* _(RateLimiter.make(5000, "1 minutes"))
 
     const client = yield* _(Effect.sync(() =>
       new OpenAIApi({
