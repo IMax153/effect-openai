@@ -5,7 +5,7 @@ import * as NodeSdk from "@effect/opentelemetry/NodeSdk"
 import * as Path from "@effect/platform-node/Path"
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus"
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
-import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
+import { SimpleSpanProcessor } from "@opentelemetry/sdk-trace-base"
 import * as Migrator from "@sqlfx/sqlite/Migrator/Node"
 import * as SQLite from "@sqlfx/sqlite/node"
 import * as Config from "effect/Config"
@@ -13,7 +13,8 @@ import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Stream from "effect/Stream"
 import * as NodePath from "node:path"
-import * as Vss from "sqlite-vss"
+// Comment in if not running in Gitpod
+// import * as Vss from "sqlite-vss"
 import { fileURLToPath } from "url"
 import * as Completions from "./Completions.js"
 import * as DocumentChunker from "./DocumentChunker.js"
@@ -31,8 +32,13 @@ const __dirname = NodePath.dirname(__filename)
 
 const VSSLive = Layer.effectDiscard(Effect.gen(function*(_) {
   const sql = yield* _(SQLite.tag)
-  yield* _(sql.loadExtension((Vss as any).getVectorLoadablePath()))
-  yield* _(sql.loadExtension((Vss as any).getVssLoadablePath()))
+  // Comment in if not running in Gitpod
+  // yield* _(sql.loadExtension((Vss as any).getVectorLoadablePath()))
+  // yield* _(sql.loadExtension((Vss as any).getVssLoadablePath()))
+  const vectorPath = "/nix/store/h1qfi9pc6f1kjigb876flp95qyfxgmzn-sqlite-vss-0.1.2/lib/vector0.so"
+  const vssPath = "/nix/store/h1qfi9pc6f1kjigb876flp95qyfxgmzn-sqlite-vss-0.1.2/lib/vss0.so"
+  yield* _(sql.loadExtension(vectorPath))
+  yield* _(sql.loadExtension(vssPath))
 }))
 
 const SQLiteLive = (embeddings: AbsolutePath) =>
@@ -52,7 +58,7 @@ const MigratorLive = Migrator.makeLayer({
 
 const TelemetryLive = NodeSdk.layer(() => ({
   resource: { serviceName: "openai-effect" },
-  spanProcessor: new BatchSpanProcessor(new OTLPTraceExporter()),
+  spanProcessor: new SimpleSpanProcessor(new OTLPTraceExporter()),
   metricReader: new PrometheusExporter()
 }))
 
