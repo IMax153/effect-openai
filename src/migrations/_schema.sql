@@ -22,6 +22,6 @@ CREATE VIRTUAL TABLE vss_chunks
 CREATE TABLE IF NOT EXISTS "vss_chunks_index"(rowid integer primary key autoincrement, idx);
 CREATE TABLE IF NOT EXISTS "vss_chunks_data"(rowid integer primary key autoincrement, _);
 
-INSERT INTO sqlfx_migrations VALUES(1,'2024-02-10 22:39:20','create_document_chunks');
-INSERT INTO sqlfx_migrations VALUES(2,'2024-02-10 22:39:20','document_chunk_unique_index');
-INSERT INTO sqlfx_migrations VALUES(3,'2024-02-10 22:39:20','create_vss_chunks');
+INSERT INTO sqlfx_migrations VALUES(1,'2024-02-11 12:49:28','create_document_chunks');
+INSERT INTO sqlfx_migrations VALUES(2,'2024-02-11 12:49:28','document_chunk_unique_index');
+INSERT INTO sqlfx_migrations VALUES(3,'2024-02-11 12:49:28','create_vss_chunks');

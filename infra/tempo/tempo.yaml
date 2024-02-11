@@ -43,9 +43,10 @@ compactor:
 
 # https://grafana.com/docs/tempo/latest/configuration/#metrics-generator
 metrics_generator:
-  processor:
-    span_metrics:
-      dimensions: []
+  registry:
+    external_labels:
+      source: tempo
+      cluster: docker-compose
 
   storage:
     path: /tmp/tempo/wal
@@ -54,9 +55,9 @@ metrics_generator:
         send_exemplars: true
 
 overrides:
-  metrics_generator_processors: ['service-graphs', 'span-metrics']
-  metrics_generator_collection_interval: 250ms
-  max_bytes_per_trace: 67108864 # 64mb (5mb default)
+  defaults:
+    metrics_generator:
+      processors: [service-graphs, span-metrics] # enables metrics generator
 
 storage:
   trace:

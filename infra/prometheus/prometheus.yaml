@@ -13,8 +13,3 @@ scrape_configs:
     static_configs:
       - targets:
           - tempo:3200
-
-  - job_name: oltp-metrics
-    static_configs:
-      - targets:
-          - otel-collector:8889
