@@ -25,7 +25,7 @@ const make = Effect.gen(function*(_) {
   const openai = yield* _(OpenAI.OpenAI)
   const cache = yield* _(Request.makeCache({ capacity: 5000, timeToLive: "1 days" }))
 
-  interface EmbeddingRequest extends Request.Request<OpenAI.OpenAIError, Float32Array> {
+  interface EmbeddingRequest extends Request.Request<Float32Array, OpenAI.OpenAIError> {
     readonly _tag: "EmbeddingRequest"
     readonly input: string
   }
@@ -80,10 +80,9 @@ const make = Effect.gen(function*(_) {
   return { single, batched } as const
 })
 
-export interface Embeddings {
-  readonly _: unique symbol
+export class Embeddings extends Context.Tag("@services/Embeddings")<
+  Embeddings,
+  Effect.Effect.Success<typeof make>
+>() {
+  static readonly Live = Layer.scoped(this, make)
 }
-
-export const Embeddings = Context.Tag<Embeddings, Effect.Effect.Success<typeof make>>()
-
-export const EmbeddingsLive = Layer.scoped(Embeddings, make)

@@ -42,15 +42,14 @@ export const make = Effect.gen(function*(_) {
   } as const
 })
 
-export interface DocumentChunker {
-  readonly _: unique symbol
+export class DocumentChunker extends Context.Tag("@services/DocumentChunker")<
+  DocumentChunker,
+  Effect.Effect.Success<typeof make>
+>() {
+  static readonly Live = Layer.effect(DocumentChunker, make).pipe(
+    Layer.provide(DocumentChunkRepository.DocumentChunkRepository.Live)
+  )
 }
-
-export const DocumentChunker = Context.Tag<DocumentChunker, Effect.Effect.Success<typeof make>>()
-
-export const DocumentChunkerLive = Layer.effect(DocumentChunker, make).pipe(
-  Layer.provide(DocumentChunkRepository.DocumentChunkRepositoryLive)
-)
 
 const splitTitle = (content: string) => {
   const chunks = content.split(/^#+\s+/m)

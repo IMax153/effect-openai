@@ -15,12 +15,7 @@ export const make = Effect.gen(function*(_) {
   const openai = yield* _(OpenAI.OpenAI)
 
   const cache = yield* _(Cache.make({
-    lookup: (_query: string) =>
-      Effect.succeedNone as Effect.Effect<
-        never,
-        never,
-        Option.Option<string>
-      >,
+    lookup: (_query: string) => Effect.succeedNone as Effect.Effect<Option.Option<string>>,
     capacity: 10000,
     timeToLive: "3 days"
   }))
@@ -97,12 +92,11 @@ export const make = Effect.gen(function*(_) {
   }
 })
 
-export interface Completions {
-  readonly _: unique symbol
+export class Completions extends Context.Tag("@services/Completions")<
+  Completions,
+  Effect.Effect.Success<typeof make>
+>() {
+  static readonly Live = Layer.effect(this, make).pipe(
+    Layer.provide(AIContext.AIContext.Live)
+  )
 }
-
-export const Completions = Context.Tag<Completions, Effect.Effect.Success<typeof make>>()
-
-export const CompletionsLive = Layer.effect(Completions, make).pipe(
-  Layer.provide(AIContext.AIContextLive)
-)

@@ -86,13 +86,12 @@ const make = (options: OpenAIOptions) =>
     }
   })
 
-export interface OpenAI {
-  readonly _: unique symbol
+export class OpenAI extends Context.Tag("@services/OpenAI")<
+  OpenAI,
+  Effect.Effect.Success<ReturnType<typeof make>>
+>() {
+  static readonly Live = (config: Config.Config.Wrap<OpenAIOptions>) =>
+    Layer.scoped(OpenAI, Config.unwrap(config).pipe(Effect.flatMap(make))).pipe(
+      Layer.provide(RateLimiter.FactoryLive)
+    )
 }
-
-export const OpenAI = Context.Tag<OpenAI, Effect.Effect.Success<ReturnType<typeof make>>>()
-
-export const makeLayer = (config: Config.Config.Wrap<OpenAIOptions>) =>
-  Layer.scoped(OpenAI, Config.unwrap(config).pipe(Effect.flatMap(make))).pipe(
-    Layer.provide(RateLimiter.FactoryLive)
-  )

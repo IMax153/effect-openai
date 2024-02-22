@@ -165,16 +165,12 @@ const make = Effect.gen(function*(_) {
   } as const
 })
 
-export interface DocumentChunkRepository {
-  readonly _: unique symbol
-}
-
-export const DocumentChunkRepository = Context.Tag<
+export class DocumentChunkRepository extends Context.Tag("@services/DocumentChunkRepository")<
   DocumentChunkRepository,
   Effect.Effect.Success<typeof make>
->()
-
-export const DocumentChunkRepositoryLive = Layer.provide(
-  Layer.scoped(DocumentChunkRepository, make),
-  Embedding.EmbeddingsLive
-)
+>() {
+  static readonly Live = Layer.provide(
+    Layer.scoped(this, make),
+    Embedding.Embeddings.Live
+  )
+}

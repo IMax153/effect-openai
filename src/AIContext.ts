@@ -82,12 +82,11 @@ const make = Effect.gen(function*(_) {
   return { generate } as const
 })
 
-export interface AIContext {
-  readonly _: unique symbol
+export class AIContext extends Context.Tag("@services/AIContext")<
+  AIContext,
+  Effect.Effect.Success<typeof make>
+>() {
+  static readonly Live = Layer.effect(this, make).pipe(
+    Layer.provide(DocumentChunkRepository.DocumentChunkRepository.Live)
+  )
 }
-
-export const AIContext = Context.Tag<AIContext, Effect.Effect.Success<typeof make>>()
-
-export const AIContextLive = Layer.effect(AIContext, make).pipe(
-  Layer.provide(DocumentChunkRepository.DocumentChunkRepositoryLive)
-)

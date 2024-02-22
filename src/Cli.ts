@@ -2,13 +2,14 @@ import * as Args from "@effect/cli/Args"
 import * as Command from "@effect/cli/Command"
 import * as Options from "@effect/cli/Options"
 import * as NodeSdk from "@effect/opentelemetry/NodeSdk"
-import * as Path from "@effect/platform-node/Path"
+import * as Path from "@effect/platform/Path"
 import { PrometheusExporter } from "@opentelemetry/exporter-prometheus"
 import { OTLPTraceExporter } from "@opentelemetry/exporter-trace-otlp-http"
 import { BatchSpanProcessor } from "@opentelemetry/sdk-trace-base"
 import * as Migrator from "@sqlfx/sqlite/Migrator/Node"
 import * as SQLite from "@sqlfx/sqlite/node"
 import * as Config from "effect/Config"
+import * as Context from "effect/Context"
 import * as Effect from "effect/Effect"
 import * as Layer from "effect/Layer"
 import * as Stream from "effect/Stream"
@@ -30,6 +31,13 @@ const __dirname = NodePath.dirname(__filename)
 // Command Environment
 // =============================================================================
 
+export class EmbeddingsDbPath extends Context.Tag("@services/EmbeddingsDbPath")<
+  EmbeddingsDbPath,
+  AbsolutePath
+>() {
+  static readonly Live = (embeddings: AbsolutePath) => Layer.succeed(this, embeddings)
+}
+
 const VSSLive = Layer.effectDiscard(Effect.gen(function*(_) {
   const sql = yield* _(SQLite.tag)
   // Comment in if not running in Gitpod
@@ -41,15 +49,17 @@ const VSSLive = Layer.effectDiscard(Effect.gen(function*(_) {
   yield* _(sql.loadExtension(vssPath))
 }))
 
-const SQLiteLive = (embeddings: AbsolutePath) =>
-  Layer.provideMerge(
+const SQLiteLive = Effect.gen(function*(_) {
+  const embeddingsDbPath = yield* _(EmbeddingsDbPath)
+  return Layer.provideMerge(
     VSSLive,
     SQLite.makeLayer({
-      filename: Config.succeed(embeddings),
+      filename: Config.succeed(embeddingsDbPath),
       transformQueryNames: Config.succeed(SQLite.transform.camelToSnake),
       transformResultNames: Config.succeed(SQLite.transform.snakeToCamel)
     })
   )
+}).pipe(Layer.unwrapEffect)
 
 const MigratorLive = Migrator.makeLayer({
   loader: Migrator.fromDisk(`${__dirname}/migrations`),
@@ -64,11 +74,14 @@ const TelemetryLive = NodeSdk.layer(() => ({
 
 const CommandEnvLive = (embeddings: AbsolutePath) =>
   Layer.mergeAll(
-    Completions.CompletionsLive,
-    DocumentChunker.DocumentChunkerLive,
+    Completions.Completions.Live,
+    DocumentChunker.DocumentChunker.Live,
     MigratorLive,
     TelemetryLive
-  ).pipe(Layer.provide(SQLiteLive(embeddings)))
+  ).pipe(
+    Layer.provide(SQLiteLive),
+    Layer.provideMerge(EmbeddingsDbPath.Live(embeddings))
+  )
 
 // =============================================================================
 // Common Options & Arguments
